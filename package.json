@@ -1,0 +1,60 @@
+{
+  "name": "spo-rag",
+  "version": "1.0.0",
+  "description": "SharePoint RAG solution with Node.js, FAISS, and Langchain",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "crawler": "tsx src/crawler/index.ts",
+    "api": "tsx src/api/server.ts",
+    "dev": "tsx watch src/api/server.ts",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "sharepoint",
+    "rag",
+    "faiss",
+    "langchain",
+    "openai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/community": "^1.1.1",
+    "@langchain/core": "^1.1.7",
+    "@langchain/openai": "^1.2.0",
+    "@langchain/textsplitters": "^1.0.1",
+    "@pnp/nodejs": "^3.24.0",
+    "@pnp/sp": "^3.24.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "faiss-node": "^0.5.1",
+    "helmet": "^7.1.0",
+    "langchain": "^1.2.2",
+    "mammoth": "^1.6.0",
+    "pdf-parse": "^1.1.1",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.11.5",
+    "@types/pdf-parse": "^1.1.4",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.4",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
