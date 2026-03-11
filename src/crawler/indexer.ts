@@ -1,4 +1,4 @@
-import { PineconeClient } from '@pinecone-database/pinecone';
+import { Pinecone } from '@pinecone-database/pinecone';
 import { PineconeStore } from '../shared/langchain-pinecone-adapter';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { Document } from '@langchain/core/documents';
@@ -43,8 +43,13 @@ export class Indexer {
       logger.info(`Created ${allChunks.length} chunks from ${documents.length} documents`);
 
       // Initialise Pinecone client and index
-      const pinecone = new PineconeClient();
-      await pinecone.init({ apiKey: config.pinecone.apiKey, environment: config.pinecone.environment });
+      const pinecone = new Pinecone({
+        apiKey: config.pinecone.apiKey,        
+     //   environment: config.pinecone.environment,        
+
+      });
+      // const pinecone = new PineconeClient();
+      // await pinecone.init({ apiKey: config.pinecone.apiKey, environment: config.pinecone.environment });
       const index = pinecone.Index(config.pinecone.indexName);
 
       // Full re-index: delete all existing vectors in the index
@@ -68,7 +73,7 @@ export class Indexer {
       logger.info('Pinecone index created successfully');
       return vectorStore;
     } catch (error) {
-      logger.error('Failed to create Pinecone index', { error });
+      logger.error('Failed to create Pinecone index', error);
       throw error;
     }
   }

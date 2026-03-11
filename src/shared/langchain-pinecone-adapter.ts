@@ -1,4 +1,4 @@
-import { PineconeClient } from '@pinecone-database/pinecone';
+import { Pinecone } from '@pinecone-database/pinecone';
 import { Document } from '@langchain/core/documents';
 import { config } from './config';
 import { logger } from './logger';
@@ -20,9 +20,8 @@ export class PineconeStore {
     let index: PineconeIndex | undefined = opts?.pineconeIndex;
 
     if (!index) {
-      const client = new PineconeClient();
-      await client.init({ apiKey: config.pinecone.apiKey, environment: config.pinecone.environment });
-      index = client.Index(config.pinecone.indexName);
+      const pinecone = new Pinecone({ apiKey: config.pinecone.apiKey });
+      index = pinecone.Index({ name: config.pinecone.indexName });
     }
 
     const store = new PineconeStore({ pineconeIndex: index, embeddings, textKey: opts?.textKey });
@@ -34,9 +33,8 @@ export class PineconeStore {
     let index: PineconeIndex | undefined = opts?.pineconeIndex;
 
     if (!index) {
-      const client = new PineconeClient();
-      await client.init({ apiKey: config.pinecone.apiKey, environment: config.pinecone.environment });
-      index = client.Index(config.pinecone.indexName);
+      const pinecone = new Pinecone({ apiKey: config.pinecone.apiKey });
+      index = pinecone.Index({ name: config.pinecone.indexName });
     }
 
     return new PineconeStore({ pineconeIndex: index, embeddings, textKey: opts?.textKey });
@@ -66,7 +64,7 @@ export class PineconeStore {
       const batchSize = 100;
       for (let i = 0; i < records.length; i += batchSize) {
         const batch = records.slice(i, i + batchSize);
-        await this.pineconeIndex.upsert(batch);
+        await this.pineconeIndex.upsert({ records: batch });
       }
     } catch (err) {
       logger.error('Failed to add documents to Pinecone index', { err });

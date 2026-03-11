@@ -1,4 +1,4 @@
-import { PineconeClient } from '@pinecone-database/pinecone';
+import { Pinecone } from '@pinecone-database/pinecone';
 import { PineconeStore } from './langchain-pinecone-adapter';
 import { EventEmitter } from 'events';
 import { config } from './config';
@@ -19,11 +19,7 @@ export class VectorStore extends EventEmitter {
   }
 
   private async initPineconeClient() {
-    const client = new PineconeClient();
-    await client.init({
-      apiKey: config.pinecone.apiKey,
-      environment: config.pinecone.environment,
-    });
+    const client = new Pinecone({ apiKey: config.pinecone.apiKey });
     return client;
   }
 

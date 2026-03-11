@@ -4,7 +4,7 @@ import '@pnp/sp/lists';
 import '@pnp/sp/files';
 import '@pnp/sp/folders';
 import '@pnp/sp/items';
-import { NodeFetch, MSAL, SPDefault } from '@pnp/nodejs';
+import { MSAL, SPDefault } from '@pnp/nodejs';
 import { readFileSync } from 'fs';
 import { config } from '../shared/config';
 import { logger } from '../shared/logger';
@@ -100,6 +100,7 @@ export class SharePointClient {
         .select(
           '*',
           'File/Name',
+          'File/UniqueId',
           'File/ServerRelativeUrl',
           'File/TimeLastModified',
           'File/Length',

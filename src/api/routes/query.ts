@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { ChatOpenAI } from '@langchain/openai';
-import { RetrievalQAChain } from 'langchain/chains';
+import { RetrievalQAChain } from '@langchain/classic/chains';
 import { VectorStore } from '../../shared/vector-store';
 import { config } from '../../shared/config';
 import { logger } from '../../shared/logger';
