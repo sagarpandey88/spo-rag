@@ -23,25 +23,24 @@ class Server {
     try {
       logger.info('Initializing server...');
 
-      // Load FAISS index
-      const indexExists = await this.vectorStoreManager.indexExists();
-      
-      if (!indexExists) {
-        logger.warn('FAISS index not found. Please run the crawler first.');
-        logger.warn('Server will start but queries will fail until index is created.');
-      } else {
-        await this.vectorStoreManager.load();
-        logger.info('FAISS index loaded successfully');
+      // Connect to Pinecone store
+      await this.vectorStoreManager.load();
+      logger.info('Pinecone store connected successfully');
 
-        // Start index watcher
-        this.indexWatcher = new IndexWatcher(
-          this.vectorStoreManager,
-          async () => {
-            await this.vectorStoreManager.load();
-          }
-        );
-        this.indexWatcher.start();
+      const indexExists = await this.vectorStoreManager.indexExists();
+      if (!indexExists) {
+        logger.warn('Pinecone index is empty. Please run the crawler first.');
+        logger.warn('Server will start but queries will return empty results until data is indexed.');
       }
+
+      // Listen for index update events emitted by the crawler (same-process only)
+      this.indexWatcher = new IndexWatcher(
+        this.vectorStoreManager,
+        async () => {
+          logger.info('Pinecone index updated; store is live');
+        }
+      );
+      this.indexWatcher.start();
 
       this.setupMiddleware();
       this.setupRoutes();

@@ -11,8 +11,6 @@ services:
     env_file:
       - .env
     volumes:
-      # Shared volume for FAISS index
-      - faiss-data:/app/data
       # Certificate volume
       - ./certs:/app/certs:ro
       # Logs volume
@@ -33,8 +31,6 @@ services:
     ports:
       - "${API_PORT:-3000}:3000"
     volumes:
-      # Shared volume for FAISS index
-      - faiss-data:/app/data
       # Certificate volume
       - ./certs:/app/certs:ro
       # Logs volume
@@ -46,9 +42,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on:
-      - crawler
+    # Using managed Pinecone service; no local postgres dependency
 
-volumes:
-  faiss-data:
-    driver: local
+volumes: {}

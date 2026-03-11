@@ -5,7 +5,7 @@ import { DocumentProcessor } from './document-processor';
 import { Indexer } from './indexer';
 import { VectorStore } from '../shared/vector-store';
 import { logger } from '../shared/logger';
-import { CrawlResult, CrawlError, ProcessedDocument, IndexStats } from '../shared/types';
+import { CrawlError, ProcessedDocument, IndexStats } from '../shared/types';
 
 async function main() {
   const startTime = new Date();
@@ -58,8 +58,8 @@ async function main() {
       }
     }
 
-    // Create or update FAISS index
-    logger.info('Creating FAISS index');
+    // Create or update Pinecone index
+    logger.info('Creating Pinecone index');
     const indexer = new Indexer();
     const vectorStore = await indexer.createIndex(processedDocuments);
 
@@ -73,11 +73,11 @@ async function main() {
       totalDocuments: documentsProcessed,
       totalChunks,
       lastUpdated: new Date(),
-      indexSize: 0, // Will be calculated after saving
+      indexSize: 0,
     };
 
-    // Save index
-    logger.info('Saving FAISS index');
+    // Persist stats reference
+    logger.info('Updating Pinecone index metadata');
     const vectorStoreManager = new VectorStore();
     await vectorStoreManager.save(vectorStore, stats);
 

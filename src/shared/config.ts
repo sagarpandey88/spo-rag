@@ -18,11 +18,15 @@ const configSchema = z.object({
   openai: z.object({
     apiKey: z.string().min(1, 'OPENAI_API_KEY is required'),
     model: z.string().default('gpt-4-turbo-preview'),
-    embeddingModel: z.string().default('text-embedding-3-small'),
     baseURL: z.string().optional(),
   }),
-  faiss: z.object({
-    indexPath: z.string().default('./data/faiss-index'),
+  sbert: z.object({
+    modelName: z.string().default('Xenova/all-MiniLM-L6-v2'),
+  }),
+  pinecone: z.object({
+    apiKey: z.string().min(1, 'PINECONE_API_KEY is required'),
+    environment: z.string().min(1, 'PINECONE_ENVIRONMENT is required'),
+    indexName: z.string().min(1, 'PINECONE_INDEX_NAME is required'),
     chunkSize: z.coerce.number().int().positive().default(1000),
     chunkOverlap: z.coerce.number().int().nonnegative().default(200),
   }),
@@ -50,11 +54,15 @@ function loadConfig() {
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
       model: process.env.OPENAI_MODEL,
-      embeddingModel: process.env.OPENAI_EMBEDDING_MODEL,
       baseURL: process.env.AZURE_OPENAI_BASE_URL,
     },
-    faiss: {
-      indexPath: process.env.FAISS_INDEX_PATH,
+    sbert: {
+      modelName: process.env.SBERT_MODEL,
+    },
+    pinecone: {
+      apiKey: process.env.PINECONE_API_KEY,
+      environment: process.env.PINECONE_ENVIRONMENT,
+      indexName: process.env.PINECONE_INDEX_NAME,
       chunkSize: process.env.CHUNK_SIZE,
       chunkOverlap: process.env.CHUNK_OVERLAP,
     },

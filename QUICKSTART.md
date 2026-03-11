@@ -59,6 +59,7 @@ SHAREPOINT_SITE_URL=https://tenant.sharepoint.com/sites/site
 SHAREPOINT_LIBRARY_NAME=Documents
 
 OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxx
+SBERT_MODEL=Xenova/all-MiniLM-L6-v2
 ```
 
 ## Step 3: Run Crawler (Depends on document count)

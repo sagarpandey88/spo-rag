@@ -6,7 +6,7 @@ A TypeScript-based Retrieval-Augmented Generation (RAG) solution that crawls Sha
 
 - **SharePoint Integration**: Automated document crawling from SharePoint libraries using PnPjs with Azure AD authentication
 - **Document Processing**: Extract text from PDF and Word documents
-- **Vector Indexing**: FAISS-based vector store with OpenAI embeddings for semantic search
+- **Vector Indexing**: FAISS-based vector store with SBERT embeddings for semantic search
 - **RAG API**: Express.js REST API with RetrievalQA chain for intelligent question answering
 - **Real-time Updates**: Automatic index reloading when crawler updates the vector store
 - **Error Recovery**: Continues processing even when individual documents fail
@@ -32,8 +32,9 @@ A TypeScript-based Retrieval-Augmented Generation (RAG) solution that crawls Sha
 
 1. **Node.js**: v18 or higher
 2. **Azure AD App Registration**: For SharePoint authentication
-3. **OpenAI API Key**: For embeddings and chat completions
-4. **Certificate**: PEM certificate for Azure AD authentication
+3. **OpenAI API Key**: For chat completions
+4. **SBERT Model Runtime**: Downloaded automatically via Hugging Face Transformers
+5. **Certificate**: PEM certificate for Azure AD authentication
 
 ## Azure AD Setup
 
@@ -121,7 +122,9 @@ SHAREPOINT_LIBRARY_NAME=Documents
 # OpenAI Configuration
 OPENAI_API_KEY=sk-your-openai-api-key
 OPENAI_MODEL=gpt-4-turbo-preview
-OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+
+# SBERT Embeddings Configuration
+SBERT_MODEL=Xenova/all-MiniLM-L6-v2
 
 # FAISS Configuration
 FAISS_INDEX_PATH=./data/faiss-index
@@ -149,7 +152,7 @@ The crawler will:
 1. Connect to SharePoint and list all PDF/Word documents
 2. Download and process each document
 3. Create text chunks with overlap
-4. Generate embeddings using OpenAI
+4. Generate embeddings using SBERT
 5. Build and save FAISS index
 
 ### Running the API

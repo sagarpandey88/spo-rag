@@ -1,12 +1,7 @@
-import { watch } from 'fs';
-import { existsSync } from 'fs';
-//import * as path from 'path';
-import { config } from '../../shared/config';
-import { logger } from '../../shared/logger';
 import { VectorStore } from '../../shared/vector-store';
+import { logger } from '../../shared/logger';
 
 export class IndexWatcher {
-  private watcher: any;
   private vectorStoreManager: VectorStore;
   private reloadCallback: () => Promise<void>;
 
@@ -19,48 +14,22 @@ export class IndexWatcher {
   }
 
   start(): void {
-    const indexPath = config.faiss.indexPath;
+    logger.info('Starting index update listener');
 
-    if (!existsSync(indexPath)) {
-      logger.warn(`Index path does not exist: ${indexPath}. Watcher not started.`);
-      return;
-    }
-
-    logger.info('Starting index file watcher');
-
-    // Watch for changes in the index directory
-    this.watcher = watch(indexPath, { recursive: false }, async (eventType, filename) => {
-      if (filename === 'stats.json' && eventType === 'change') {
-        logger.info('Index update detected, reloading...');
-        
-        try {
-          await this.reloadCallback();
-          logger.info('Index reloaded successfully');
-        } catch (error) {
-          logger.error('Failed to reload index', { error });
-        }
-      }
-    });
-
-    // Also listen to vector store events
     this.vectorStoreManager.on('indexUpdated', async (stats) => {
       logger.info('Index updated event received', { stats });
-      
+
       try {
         await this.reloadCallback();
-        logger.info('Index reloaded after update event');
+        logger.info('Index refreshed after update');
       } catch (error) {
-        logger.error('Failed to reload index after update event', { error });
+        logger.error('Failed to refresh index after update', { error });
       }
     });
   }
 
   stop(): void {
-    if (this.watcher) {
-      this.watcher.close();
-      logger.info('Index file watcher stopped');
-    }
-
     this.vectorStoreManager.removeAllListeners('indexUpdated');
+    logger.info('Index update listener stopped');
   }
 }
