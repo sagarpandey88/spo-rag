@@ -140,3 +140,8 @@ vite.config.ts.timestamp-*
 
 
 /cert/*
+/server/cert/*
+*.pfx
+*.pem
+*.key
+*.cer
