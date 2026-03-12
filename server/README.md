@@ -1,12 +1,12 @@
-# SharePoint RAG with Node.js, FAISS & Langchain
+# SharePoint RAG with Node.js, pinecone & Langchain
 
-A TypeScript-based Retrieval-Augmented Generation (RAG) solution that crawls SharePoint documents (PDF/Word), creates FAISS vector indexes using Langchain, and provides a REST API for intelligent document querying.
+A TypeScript-based Retrieval-Augmented Generation (RAG) solution that crawls SharePoint documents (PDF/Word), creates pinecone vector indexes using Langchain, and provides a REST API for intelligent document querying.
 
 ## Features
 
 - **SharePoint Integration**: Automated document crawling from SharePoint libraries using PnPjs with Azure AD authentication
 - **Document Processing**: Extract text from PDF and Word documents
-- **Vector Indexing**: FAISS-based vector store with SBERT embeddings for semantic search
+- **Vector Indexing**: Pinecone-based vector store with SBERT embeddings for semantic search
 - **RAG API**: Express.js REST API with RetrievalQA chain for intelligent question answering
 - **Real-time Updates**: Automatic index reloading when crawler updates the vector store
 - **Error Recovery**: Continues processing even when individual documents fail
@@ -16,7 +16,7 @@ A TypeScript-based Retrieval-Augmented Generation (RAG) solution that crawls Sha
 
 ```
 ┌─────────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│   SharePoint    │ ───> │     Crawler      │ ───> │  FAISS Index    │
+│   SharePoint    │ ───> │     Crawler      │ ───> │  Pinecone Index    │
 │    Library      │      │   (Scheduled)    │      │  (Vector Store) │
 └─────────────────┘      └──────────────────┘      └─────────────────┘
                                                             │
@@ -108,37 +108,6 @@ npm run build
 
 Edit `.env` file with your credentials:
 
-```env
-# Azure AD Authentication
-AZURE_TENANT_ID=your-tenant-id
-AZURE_CLIENT_ID=your-client-id
-AZURE_CERTIFICATE_PATH=/path/to/certificate.pem
-AZURE_THUMBPRINT=your-certificate-thumbprint
-
-# SharePoint Configuration
-SHAREPOINT_SITE_URL=https://yourtenant.sharepoint.com/sites/yoursite
-SHAREPOINT_LIBRARY_NAME=Documents
-
-# OpenAI Configuration
-OPENAI_API_KEY=sk-your-openai-api-key
-OPENAI_MODEL=gpt-4-turbo-preview
-
-# SBERT Embeddings Configuration
-SBERT_MODEL=Xenova/all-MiniLM-L6-v2
-
-# FAISS Configuration
-FAISS_INDEX_PATH=./data/faiss-index
-CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
-
-# API Configuration
-API_PORT=3000
-API_HOST=0.0.0.0
-
-# Logging
-LOG_LEVEL=info
-```
-
 ## Usage
 
 ### Running the Crawler
@@ -153,7 +122,7 @@ The crawler will:
 2. Download and process each document
 3. Create text chunks with overlap
 4. Generate embeddings using SBERT
-5. Build and save FAISS index
+5. Build and save pinecone index
 
 ### Running the API
 
@@ -166,7 +135,7 @@ npm run api
 ```
 
 The API will:
-1. Load the FAISS index from disk
+1. Load the index using pinecone index
 2. Start watching for index updates
 3. Serve REST endpoints on port 3000
 
@@ -259,8 +228,6 @@ docker-compose up -d api
 ```
 
 ### Docker Structure
-
-- **Shared Volume**: `faiss-data` volume is mounted to both crawler and API containers
 - **Certificates**: Mount your certificate directory to `/app/certs`
 - **Logs**: Logs are persisted to `./logs` directory
 
@@ -277,6 +244,7 @@ To run the crawler on a schedule, use cron or a task scheduler:
 
 ```
 spo-rag/
+├── server/
 ├── src/
 │   ├── api/
 │   │   ├── middleware/
@@ -285,18 +253,18 @@ spo-rag/
 │   │   │   ├── query.ts              # RAG query endpoints
 │   │   │   └── crawler.ts            # Crawler trigger endpoints
 │   │   ├── services/
-│   │   │   └── index-watcher.ts      # FAISS index file watcher
+│   │   │   └── index-watcher.ts      # SBERT index file watcher
 │   │   └── server.ts                 # Express server setup
 │   ├── crawler/
 │   │   ├── sharepoint-client.ts      # SharePoint PnPjs client
 │   │   ├── document-processor.ts     # PDF/Word text extraction
-│   │   ├── indexer.ts                # FAISS indexing with chunking
+│   │   ├── indexer.ts                # SBERT indexing with chunking
 │   │   └── index.ts                  # Crawler CLI entry point
 │   └── shared/
 │       ├── config.ts                 # Configuration with validation
 │       ├── types.ts                  # TypeScript interfaces
 │       ├── logger.ts                 # Winston logger
-│       └── vector-store.ts           # FAISS persistence & locking
+│       └── vector-store.ts           # Pinecone persistence & locking
 ├── .env.example                      # Environment template
 ├── Dockerfile                        # Container definition
 ├── docker-compose.yml                # Multi-service orchestration
@@ -322,20 +290,15 @@ The current implementation performs full re-indexing on each crawl. For better p
 
 - Track document modification dates
 - Only reprocess changed documents
-- Update FAISS index incrementally
+- Update Pinecone index incrementally
 - Maintain document ID mapping for updates/deletions
 
 ### 2. Response Citations
 
 API responses include source document metadata (filename, URL, content excerpts) to support citation and verification of generated answers.
 
-### 3. Scaling
 
-For large deployments:
-- Use a dedicated vector database (e.g., Pinecone, Weaviate) instead of local FAISS
-- Implement caching layer (Redis) for frequently asked queries
-- Deploy multiple API instances behind a load balancer
-- Use message queue (RabbitMQ, Redis) for crawler job management
+
 
 ## Troubleshooting
 
@@ -365,13 +328,7 @@ Error: Access denied. You do not have permission
 - Check SharePoint site URL is correct
 - Ensure service account has access to the library
 
-### Index Not Found
 
-```
-Error: Index not found at ./data/faiss-index
-```
-- Run the crawler first: `npm run crawler`
-- Check FAISS_INDEX_PATH in .env
 
 ## License
 

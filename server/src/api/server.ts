@@ -75,8 +75,8 @@ class Server {
 
   private setupRoutes(): void {
     // Health check
-    this.app.get('/health', (_req, res) => {
-      const stats = this.vectorStoreManager.getStats();
+    this.app.get('/health', async (_req, res) => {
+      const stats = await this.vectorStoreManager.getStats();
       res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),

@@ -71,7 +71,7 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
   router.get(
     '/stats',
     asyncHandler(async (_req: Request, res: Response) => {
-      const stats = vectorStoreManager.getStats();
+      const stats = await vectorStoreManager.getStats();
 
       if (!stats) {
         throw new AppError('Index stats not available', 404);
