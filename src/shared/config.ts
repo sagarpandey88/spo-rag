@@ -16,9 +16,11 @@ const configSchema = z.object({
     libraryName: z.string().min(1, 'SHAREPOINT_LIBRARY_NAME is required'),
   }),
   openai: z.object({
-    apiKey: z.string().min(1, 'OPENAI_API_KEY is required'),
+    apiKey: z.string().min(1, 'AZURE_OPENAI_API_KEY is required'),
     model: z.string().default('gpt-4-turbo-preview'),
-    baseURL: z.string().optional(),
+    deploymentName: z.string().optional(),
+    apiVersion: z.string().optional(),
+    endpoint: z.string().url('AZURE_OPENAI_ENDPOINT must be a valid URL').optional(),
   }),
   sbert: z.object({
     modelName: z.string().default('Xenova/all-MiniLM-L6-v2'),
@@ -52,9 +54,12 @@ function loadConfig() {
       libraryName: process.env.SHAREPOINT_LIBRARY_NAME,
     },
     openai: {
-      apiKey: process.env.OPENAI_API_KEY,
-      model: process.env.OPENAI_MODEL,
-      baseURL: process.env.AZURE_OPENAI_BASE_URL,
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      model: process.env.AZURE_OPENAI_MODEL,      
+      deploymentName: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+      apiVersion: process.env.AZURE_OPENAI_API_VERSION,
+      endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+
     },
     sbert: {
       modelName: process.env.SBERT_MODEL,

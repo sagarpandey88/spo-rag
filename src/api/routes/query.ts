@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { ChatOpenAI } from '@langchain/openai';
+import { AzureChatOpenAI } from '@langchain/openai';
 import { RetrievalQAChain } from '@langchain/classic/chains';
 import { VectorStore } from '../../shared/vector-store';
 import { config } from '../../shared/config';
@@ -24,12 +24,14 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
       try {
         const vectorStore = vectorStoreManager.getVectorStore();
 
-        // Create LLM
-        const llm = new ChatOpenAI({
-          openAIApiKey: config.openai.apiKey,
-          modelName: config.openai.model,
-          temperature: 0,
-          ...(config.openai.baseURL && { baseURL: config.openai.baseURL }),
+        // Create LLM (Azure OpenAI deployment)
+        const llm = new AzureChatOpenAI({
+          apiKey: config.openai.apiKey,
+          model: config.openai.model,// 'gpt-5-nano',
+          deploymentName: config.openai.deploymentName,// 'gpt-5-nano',
+          azureOpenAIApiVersion: config.openai.apiVersion,// '2025-01-01-preview',
+          azureOpenAIEndpoint: config.openai.endpoint,// 'https://aoi-aitool.cognitiveservices.azure.com/',
+          temperature: 1,
         });
 
         // Create retrieval chain
@@ -60,7 +62,7 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
 
         res.json(response);
       } catch (error) {
-        logger.error('Failed to process query', { error, query });
+        logger.error('Failed to process query', error);
         throw new AppError('Failed to process query', 500);
       }
     })

@@ -87,6 +87,25 @@ export class PineconeStore {
           return new Document({ pageContent, metadata });
         });
       },
+
+      // Backwards/forwards compatibility wrapper: some versions of the
+      // Retrieval QA chain expect the retriever to expose an `invoke`
+      // method (a Chain-like interface). Provide `invoke` which accepts
+      // either a string or an object and delegates to `getRelevantDocuments`.
+      async invoke(input: any) {
+        let query: string;
+        if (typeof input === 'string') {
+          query = input;
+        } else if (input && typeof input === 'object') {
+          query = input.query ?? input.question ?? input.input ?? input.text ?? '';
+        } else {
+          query = '';
+        }
+
+        // `this` refers to the returned retriever object so calling
+        // `this.getRelevantDocuments` is fine here.
+        return await (this as any).getRelevantDocuments(query);
+      },
     };
   }
 }
