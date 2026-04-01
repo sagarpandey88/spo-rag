@@ -24,6 +24,7 @@ const configSchema = z.object({
   }),
   sbert: z.object({
     modelName: z.string().default('Xenova/all-MiniLM-L6-v2'),
+    dtype: z.string().default('fp32'),
   }),
   pinecone: z.object({
     apiKey: z.string().min(1, 'PINECONE_API_KEY is required'),
@@ -63,6 +64,7 @@ function loadConfig() {
     },
     sbert: {
       modelName: process.env.SBERT_MODEL,
+      dtype: process.env.SBERT_DTYPE,
     },
     pinecone: {
       apiKey: process.env.PINECONE_API_KEY,

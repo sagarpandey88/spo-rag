@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 *.pem
 *.key
 *.cer
+*.csr
+*.crt

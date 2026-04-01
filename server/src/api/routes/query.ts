@@ -14,6 +14,8 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
     '/',
     asyncHandler(async (req: Request, res: Response) => {
       const { query, topK = 4 } = req.body as QueryRequest;
+      // ensure topK is a number and sane
+      const k = Math.max(1, Math.min(50, Number(topK) || 4));
 
       if (!query || query.trim().length === 0) {
         throw new AppError('Query is required', 400);
@@ -35,7 +37,7 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
         });
 
         // Create retrieval chain
-        const chain = RetrievalQAChain.fromLLM(llm, vectorStore.asRetriever(topK), {
+        const chain = RetrievalQAChain.fromLLM(llm, vectorStore.asRetriever(k), {
           returnSourceDocuments: true,
         });
 
@@ -43,11 +45,24 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
         const result = await chain.call({ query });
 
         // Format sources
-        const sources: SourceDocument[] = result.sourceDocuments.map((doc: any) => ({
-          filename: doc.metadata.filename,
-          url: doc.metadata.url,
+        // Normalize scores and only include documents with score >= 60%
+        const docs = (result.sourceDocuments || []);
+        const withScores = docs.map((doc: any) => {
+          let raw = Number(doc.metadata?.score ?? 0) || 0;
+          // If Pinecone returned percentage-like scores (0-100), normalize to 0-1
+          if (raw > 1 && raw <= 100) raw = raw / 100;
+          if (raw > 100) raw = raw / 100; // defensive
+          return { doc, score: raw };
+        });
+
+        const filtered = withScores.filter((d: any) => d.score >= 0.6).map((d: any) => d.doc);
+        const returned = filtered.slice(0, k);
+
+        const sources: SourceDocument[] = returned.map((doc: any) => ({
+          filename: doc.metadata?.filename,
+          url: doc.metadata?.url,
           content: doc.pageContent,
-          score: doc.metadata.score || 0,
+          score: Number(doc.metadata?.score) || 0,
         }));
 
         const response: QueryResponse = {

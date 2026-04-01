@@ -83,6 +83,8 @@ export class PineconeStore {
 
         return (matches || []).map((m: any) => {
           const metadata = m.metadata ?? {};
+          // include the returned score so callers can surface relevance
+          if (typeof m.score !== 'undefined') metadata.score = m.score;
           const pageContent = metadata[self.textKey] ?? metadata.pageContent ?? '';
           return new Document({ pageContent, metadata });
         });
