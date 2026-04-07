@@ -4,8 +4,5 @@ import { config } from './config';
 export function createSbertEmbeddings(): HuggingFaceTransformersEmbeddings {
   return new HuggingFaceTransformersEmbeddings({
     model: config.sbert.modelName,
-    pretrainedOptions: {
-      dtype: config.sbert.dtype,
-    },
   });
 }

@@ -1,4 +1,6 @@
 import express, { Application } from 'express';
+import fs from 'fs';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import { VectorStore } from '../shared/vector-store';
@@ -88,6 +90,20 @@ class Server {
     // API routes
     this.app.use('/api/query', createQueryRouter(this.vectorStoreManager));
     this.app.use('/api/crawler', createCrawlerRouter());
+
+    // Serve built client if present (single-container deployment)
+    try {
+      const clientDist = path.join(process.cwd(), 'dist', 'client');
+      if (fs.existsSync(clientDist)) {
+        this.app.use(express.static(clientDist));
+        this.app.get('*', (_req, res) => {
+          res.sendFile(path.join(clientDist, 'index.html'));
+        });
+        logger.info('Serving frontend from', clientDist);
+      }
+    } catch (err) {
+      logger.warn('Error while attempting to serve client assets', { error: err });
+    }
 
     // 404 handler
     this.app.use((_req, res) => {
