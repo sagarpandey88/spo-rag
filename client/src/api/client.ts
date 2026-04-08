@@ -5,7 +5,7 @@ import type {
   CrawlTriggerResponse,
 } from '@/types'
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000'
+const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? window.location.origin;
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {

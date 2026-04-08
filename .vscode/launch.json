@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "command": "cd server && npm run dev",
+            "name": "Run npm api",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+        {
             "command": "cd server && npm run crawler",
             "name": "Run npm crawler",
             "request": "launch",

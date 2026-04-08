@@ -38,7 +38,7 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
         });
 
         const returned = withScores
-          .filter((d: any) => d.score >= 0.6)
+      //    .filter((d: any) => d.score >= 0.6)
           .slice(0, k)
           .map((d: any) => d.doc);
 
@@ -56,7 +56,7 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
         });
 
         // Call LLM with retrieved context
-        const prompt = `Answer the question based only on the context below. If the context does not contain the answer, say you don't know.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
+        const prompt = `You are a helpful, conversational assistant. Prefer to answer using the Context below when it contains the information needed. If the Context contains the answer, respond concisely and base your answer on that Context. If the Context does not contain the answer, you may answer using your general knowledge; do not present general-knowledge content as if it came from the Context. For short conversational queries (greetings, small talk), respond directly even if Context is empty.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
         const aiResponse = await llm.invoke(prompt);
         const answerText = typeof aiResponse.content === 'string'
           ? aiResponse.content
