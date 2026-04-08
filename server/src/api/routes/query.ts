@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import { AzureChatOpenAI } from '@langchain/openai';
-import { RetrievalQAChain } from '@langchain/classic/chains';
 import { VectorStore } from '../../shared/vector-store';
 import { config } from '../../shared/config';
 import { logger } from '../../shared/logger';
@@ -26,37 +25,42 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
       try {
         const vectorStore = vectorStoreManager.getVectorStore();
 
-        // Create LLM (Azure OpenAI deployment)
-        const llm = new AzureChatOpenAI({
-          apiKey: config.openai.apiKey,
-          model: config.openai.model,// 'gpt-5-nano',
-          deploymentName: config.openai.deploymentName,// 'gpt-5-nano',
-          azureOpenAIApiVersion: config.openai.apiVersion,// '2025-01-01-preview',
-          azureOpenAIEndpoint: config.openai.endpoint,// 'https://aoi-aitool.cognitiveservices.azure.com/',
-          temperature: 1,
-        });
+        // Retrieve relevant documents directly
+        const retriever = vectorStore.asRetriever(k);
+        const relevantDocs = await retriever.getRelevantDocuments(query);
 
-        // Create retrieval chain
-        const chain = RetrievalQAChain.fromLLM(llm, vectorStore.asRetriever(k), {
-          returnSourceDocuments: true,
-        });
-
-        // Execute query
-        const result = await chain.call({ query });
-
-        // Format sources
         // Normalize scores and only include documents with score >= 60%
-        const docs = (result.sourceDocuments || []);
-        const withScores = docs.map((doc: any) => {
+        const withScores = relevantDocs.map((doc: any) => {
           let raw = Number(doc.metadata?.score ?? 0) || 0;
-          // If Pinecone returned percentage-like scores (0-100), normalize to 0-1
           if (raw > 1 && raw <= 100) raw = raw / 100;
-          if (raw > 100) raw = raw / 100; // defensive
+          if (raw > 100) raw = raw / 100;
           return { doc, score: raw };
         });
 
-        const filtered = withScores.filter((d: any) => d.score >= 0.6).map((d: any) => d.doc);
-        const returned = filtered.slice(0, k);
+        const returned = withScores
+          .filter((d: any) => d.score >= 0.6)
+          .slice(0, k)
+          .map((d: any) => d.doc);
+
+        // Build context string for the LLM
+        const context = returned.map((d: any) => d.pageContent).join('\n\n');
+
+        // Create LLM (Azure OpenAI deployment)
+        const llm = new AzureChatOpenAI({
+          apiKey: config.openai.apiKey,
+          model: config.openai.model,
+          deploymentName: config.openai.deploymentName,
+          azureOpenAIApiVersion: config.openai.apiVersion,
+          azureOpenAIEndpoint: config.openai.endpoint,
+          temperature: 1,
+        });
+
+        // Call LLM with retrieved context
+        const prompt = `Answer the question based only on the context below. If the context does not contain the answer, say you don't know.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
+        const aiResponse = await llm.invoke(prompt);
+        const answerText = typeof aiResponse.content === 'string'
+          ? aiResponse.content
+          : JSON.stringify(aiResponse.content);
 
         const sources: SourceDocument[] = returned.map((doc: any) => ({
           filename: doc.metadata?.filename,
@@ -66,7 +70,7 @@ export function createQueryRouter(vectorStoreManager: VectorStore): Router {
         }));
 
         const response: QueryResponse = {
-          answer: result.text,
+          answer: answerText,
           sources,
         };
 

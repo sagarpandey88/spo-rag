@@ -1,4 +1,4 @@
-import { Pinecone } from '@pinecone-database/pinecone';
+import { Pinecone, PineconeRecord,RecordMetadata } from '@pinecone-database/pinecone';
 import { Document } from '@langchain/core/documents';
 import { config } from './config';
 import { logger } from './logger';
@@ -64,7 +64,7 @@ export class PineconeStore {
       const batchSize = 100;
       for (let i = 0; i < records.length; i += batchSize) {
         const batch = records.slice(i, i + batchSize);
-        await this.pineconeIndex.upsert({ records: batch });
+        await this.pineconeIndex.upsert({ records: batch as PineconeRecord<RecordMetadata>[] });
       }
     } catch (err) {
       logger.error('Failed to add documents to Pinecone index', { err });

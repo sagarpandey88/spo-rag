@@ -1,40 +1,41 @@
-FROM node:20-bullseye AS builder
+# ── Stage 1: build the React/Vite client ─────────────────────────────────────
+FROM node:20-alpine AS web-builder
 
-WORKDIR /app
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm ci
+COPY client/ ./
+RUN npm run build
 
-# Build client
-COPY client/package*.json ./client/
-RUN cd client && npm ci
-COPY client/ ./client/
-RUN cd client && npm run build
+# ── Stage 2: compile the TypeScript server ────────────────────────────────────
+FROM node:20-bullseye-slim AS api-builder
 
-# Build server
-COPY server/package*.json ./server/
-COPY server/tsconfig.json ./server/
-RUN cd server && npm ci
-COPY server/ ./server/
-RUN cd server && npm run build
-
-FROM node:20-bullseye
-WORKDIR /app
-
-# Install production deps for server
+WORKDIR /app/server
 COPY server/package*.json ./
-RUN npm ci --production
+COPY server/tsconfig.json ./
+RUN npm ci
+COPY server/src ./src
+RUN npm run build
 
-# Copy server dist and built client into server dist/client
-COPY --from=builder /app/server/dist ./dist
-COPY --from=builder /app/client/dist ./dist/client
+# ── Stage 3: production runner ────────────────────────────────────────────────
+FROM node:20-bullseye-slim AS runner
 
-# Ensure logs and certs directories exist
-RUN mkdir -p /app/logs /app/certs
+WORKDIR /app
+
+# Install only production dependencies in the runner image
+# so native binaries are compiled for the correct OS/arch
+COPY server/package*.json ./
+RUN npm ci --omit=dev
+
+# Copy compiled server output and client static assets
+COPY --from=api-builder /app/server/dist ./dist
+COPY --from=web-builder /app/client/dist ./dist/client
+
+# Copy runtime supervisor
+COPY server/start.js ./start.js
 
 ENV NODE_ENV=production
 
 EXPOSE 3000
 
-# Use server-provided entrypoint to start API + crawler
-COPY server/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-CMD ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["node", "/app/start.js"]
