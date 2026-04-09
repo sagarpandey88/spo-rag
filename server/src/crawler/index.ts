@@ -107,13 +107,13 @@ async function main() {
 
     process.exit(0);
   } catch (error) {
-    logger.error('Crawl failed', { error });
+    logger.error('Crawl failed', { error , stack: error instanceof Error ? error.stack : 'No stack trace available' });
     process.exit(1);
   }
 }
 
 // Run the crawler
 main().catch((error) => {
-  logger.error('Unexpected error', { error });
+  logger.error('Unexpected error', { error , stack: error instanceof Error ? error.stack : 'No stack trace available' });
   process.exit(1);
 });

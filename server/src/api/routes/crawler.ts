@@ -20,29 +20,48 @@ export function createCrawlerRouter(): Router {
       crawlInProgress = true;
 
       // Start crawler as a child process
-      const crawlerProcess = spawn('npm', ['run', 'crawler'], {
+      const crawlerProcess = spawn('npm', ['run', 'container:crawler'], {
         stdio: 'pipe',
         shell: true,
       });
 
-      let output = '';
+      let stdout = '';
+      let stderr = '';
 
       crawlerProcess.stdout.on('data', (data) => {
-        output += data.toString();
-        logger.debug('Crawler output', { output: data.toString() });
+        const text = data.toString();
+        stdout += text;
+        logger.debug('Crawler output', { output: text });
       });
 
       crawlerProcess.stderr.on('data', (data) => {
-        logger.error('Crawler error output', { error: data.toString() });
+        const text = data.toString();
+        stderr += text;
+        // Log stderr as debug + error to capture full output and keep structured error
+        logger.debug('Crawler stderr', { stderr: text });
+        logger.error('Crawler error output', { error: text });
+      });
+
+      crawlerProcess.on('error', (err: Error) => {
+        crawlInProgress = false;
+        logger.error('Failed to start crawler process', {
+          message: err?.message ?? 'Unknown error',
+          stack: err instanceof Error ? err.stack : 'No stack trace available',
+        });
       });
 
       crawlerProcess.on('close', (code) => {
         crawlInProgress = false;
-        
+
         if (code === 0) {
           logger.info('Crawl completed successfully');
         } else {
-          logger.error('Crawl failed', { exitCode: code });
+          // Include captured stdout/stderr to aid troubleshooting
+          logger.error('Crawl failed', {
+            exitCode: code,
+            stdout: stdout || 'No stdout captured',
+            stderr: stderr || 'No stderr captured',
+          });
         }
       });
 
